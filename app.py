@@ -1,5 +1,5 @@
 import streamlit as st
-from scraper import scrape_karkidi_jobs
+from scrape_karkidi_jobs import scrape_karkidi_jobs
 from preprocess import preprocess_skills, vectorize_skills
 from clustering import cluster_jobs
 from notifier import notify_users  # Will extend to email
