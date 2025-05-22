@@ -1,7 +1,6 @@
 from scrape_karkidi_jobs import scrape_karkidi_jobs
 from preprocess import preprocess_skills, vectorize_skills
 from clustering import cluster_jobs, save_model
-from notifier import notify_users
 import os
 
 def main():
@@ -25,11 +24,7 @@ def main():
     os.makedirs("models", exist_ok=True)
     save_model(model, vectorizer)
 
-    # ✅ Define user skill preferences
-    user_skills = ["python", "machine learning", "nlp"]
-
-    # ✅ Notify based on the jobs just scraped
-    notify_users(df, user_skills)
+    print("✅ Pipeline completed. Model and vectorizer saved.")
 
 if __name__ == "__main__":
     main()
