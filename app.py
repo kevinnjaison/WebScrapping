@@ -1,48 +1,49 @@
 import streamlit as st
 from scrape_karkidi_jobs import scrape_karkidi_jobs
 from preprocess import preprocess_skills, vectorize_skills
-from clustering import load_model_and_vectorizer
-import joblib
+from clustering import cluster_jobs
+import pandas as pd
 
-st.title("📢 Job Recommender - Karkidi Scraper")
+st.title("📢 Job Notifier - Karkidi Scraper")
 
-# Input from user
 skills_input = st.text_input("Enter your skills (comma-separated)", "python, machine learning, sql")
 
 if st.button("Find Matching Jobs"):
-    with st.spinner("Scraping and analyzing jobs..."):
+    with st.spinner("🔍 Scraping and analyzing jobs..."):
         df = scrape_karkidi_jobs(keyword="data science", pages=2)
+
         if df.empty:
             st.warning("No jobs found.")
         else:
-            # Preprocess and vectorize
+            # Clean and vectorize
             df = preprocess_skills(df)
-            X, _ = vectorize_skills(df)
+            X, vectorizer = vectorize_skills(df)
 
-            # Load trained model and vectorizer
-            model = joblib.load("models/kmeans_model.pkl")
-            vectorizer = joblib.load("models/vectorizer.pkl")
+            # Fresh KMeans model every time
+            model = cluster_jobs(X, n_clusters=5)
+            df["Cluster"] = model.labels_
 
-            # Predict clusters
-            df["Cluster"] = model.predict(X)
+            # Match jobs to user skills
+            user_skills = [skill.strip().lower() for skill in skills_input.split(",") if skill.strip()]
+            matched_jobs = []
 
-            # Convert user input to vector
-            user_skills = [skill.strip() for skill in skills_input.split(",") if skill.strip()]
-            user_vec = vectorizer.transform([" ".join(user_skills)])
-            user_cluster = model.predict(user_vec)[0]
+            for i, row in df.iterrows():
+                job_skills = row["Skills"].lower().split(",")
+                job_skills = [skill.strip() for skill in job_skills]
+                match_score = len(set(job_skills) & set(user_skills))
+                if match_score > 0:
+                    matched_jobs.append(row)
 
-            # Filter matching jobs
-            matched_jobs = df[df["Cluster"] == user_cluster]
-
-            st.subheader("🔍 Matching Jobs:")
-            if not matched_jobs.empty:
-                for _, job in matched_jobs.iterrows():
+            # Show results
+            if matched_jobs:
+                st.success(f"Found {len(matched_jobs)} matching jobs:")
+                for job in matched_jobs:
                     st.markdown(f"""
-                    **{job['Title']}** at *{job['Company']}*
-                    - 📍 {job['Location']}
-                    - 🛠 Skills: {job['Skills']}
-                    - 📝 {job['Summary']}
-                    ---
+                    ### {job['Title']} at {job['Company']}
+                    📍 {job['Location']}  
+                    🛠 Skills: {job['Skills']}  
+                    📝 {job['Summary']}  
+                    ---  
                     """)
             else:
                 st.info("No matching jobs found.")

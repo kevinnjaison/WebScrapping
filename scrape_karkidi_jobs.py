@@ -10,7 +10,6 @@ def scrape_karkidi_jobs(keyword="data science", pages=1):
 
     for page in range(1, pages + 1):
         url = base_url.format(page=page, query=keyword.replace(' ', '%20'))
-        print(f"Scraping page: {page}")
         response = requests.get(url, headers=headers)
         soup = BeautifulSoup(response.content, "html.parser")
 
@@ -34,15 +33,7 @@ def scrape_karkidi_jobs(keyword="data science", pages=1):
                     "Summary": summary,
                     "Skills": skills
                 })
-            except Exception as e:
-                print(f"Error parsing job block: {e}")
+            except Exception:
                 continue
-
-        time.sleep(1)  # Be nice to the server
-
+        time.sleep(1)
     return pd.DataFrame(jobs_list)
-
-# Example use:
-if __name__ == "__main__":
-    df_jobs = scrape_karkidi_jobs(keyword="data science", pages=2)
-    print(df_jobs.head())

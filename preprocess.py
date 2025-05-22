@@ -1,12 +1,13 @@
 import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
+import re
 
 def preprocess_skills(df):
-    df = df.copy()
-    df['Skills'] = df['Skills'].str.lower().str.replace(',', ' ').str.replace('-', ' ')
+    df["Skills"] = df["Skills"].fillna("").apply(lambda x: re.sub(r'[\n\r]', ', ', x))
     return df
+
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 def vectorize_skills(df):
     vectorizer = TfidfVectorizer(stop_words='english')
-    X = vectorizer.fit_transform(df['Skills'])
+    X = vectorizer.fit_transform(df["Skills"])
     return X, vectorizer
